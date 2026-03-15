@@ -1,99 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YOUR CODE GUIDE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fafafa;
-            color: #18181b;
-            scroll-behavior: smooth;
-        }
-        .code-font { font-family: 'Fira Code', monospace; }
-        .serif-font { font-family: 'Playfair Display', serif; }
-        
-        /* Smooth transitions for the monk-like feel */
-        .explanation-card {
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .section-focus {
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Code Guide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --card: #ffffff;
+      --ink: #1a1a1a;
+      --muted: #888880;
+      --accent: #2f4f2f;
+      --accent2: #c8a96e;
+      --border: #e2e0d8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+    .serif { font-family: 'Lora', serif; }
+    .mono  { font-family: 'Fira Code', monospace; }
 
-        /* Minimal scrollbar */
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+    .app { display: flex; min-height: 100vh; }
+    .left  { flex: 1; padding: 3rem 4rem; max-width: 780px; overflow-x: hidden; }
+    .right {
+      width: 400px; flex-shrink: 0; background: var(--card);
+      border-left: 1px solid var(--border); position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column; padding: 2.5rem 2.5rem 2rem; overflow-y: auto;
+    }
+
+    .nav { display: flex; gap: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 3.5rem; }
+    .nav-btn {
+      font-size: .68rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--muted); background: none; border: none; cursor: pointer;
+      padding-bottom: 1rem; margin-bottom: -1.05rem; border-bottom: 2px solid transparent; transition: all .3s;
+    }
+    .nav-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+    .nav-btn:hover:not(.active) { color: var(--ink); }
+
+    #app-header h1 { font-size: 3rem; font-weight: 600; line-height: 1.15; margin-bottom: .75rem; }
+    #app-header p  { font-size: 1.1rem; color: var(--muted); font-weight: 300; max-width: 480px; line-height: 1.7; }
+
+    .content-area { margin-top: 4rem; display: flex; flex-direction: column; gap: 5rem; padding-bottom: 8rem; }
+    .section-block { opacity: .2; transform: translateY(12px); transition: opacity .7s ease, transform .7s ease; }
+    .section-block.active { opacity: 1; transform: translateY(0); }
+
+    .code-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem 2.25rem; box-shadow: 0 4px 30px rgba(0,0,0,.06); }
+    .code-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+    .lang-tag { font-size: .65rem; font-weight: 800; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; }
+    .dots { display: flex; gap: .4rem; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+    pre { font-size: .88rem; line-height: 1.85; overflow-x: auto; white-space: pre-wrap; }
+    .text-block p { font-size: 1.1rem; color: #4a4a44; line-height: 1.85; font-weight: 300; }
+
+    .kw  { color: #2f4f2f; font-weight: 600; }
+    .str { color: #8a6020; }
+    .cmt { color: #aaa99a; font-style: italic; }
+
+    .sidebar-label { display: inline-block; font-size: .62rem; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; background: var(--ink); color: white; padding: .35rem .85rem; border-radius: 99px; margin-bottom: 1.25rem; }
+    #explanation-box { transition: opacity .4s ease, transform .4s ease; }
+    #explanation-text { font-size: 1.5rem; line-height: 1.55; color: #2a2a2a; }
+    #sidebar-placeholder { text-align: center; color: var(--muted); position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: .18; transition: opacity .6s; }
+    #sidebar-placeholder p:first-child { font-size: 1rem; margin-bottom: .4rem; }
+    #sidebar-placeholder p:last-child  { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; }
+    .sidebar-body { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 280px; }
+    .sidebar-footer { font-size: .62rem; color: #ccc; letter-spacing: .15em; text-transform: uppercase; line-height: 1.8; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+    /* UPLOAD */
+    .upload-section { margin-top: 5rem; padding-top: 4rem; border-top: 1px solid var(--border); }
+    .upload-section h2 { font-size: 1.8rem; font-weight: 600; margin-bottom: .5rem; }
+    .upload-section .sub { font-size: .95rem; color: var(--muted); margin-bottom: 2rem; }
+    .drop-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all .3s; background: white; }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: #f0f4f0; }
+    .drop-zone .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .drop-zone p { color: var(--muted); font-size: .9rem; }
+    .drop-zone strong { color: var(--ink); }
+    #file-input { display: none; }
+
+    .file-result { margin-top: 2.5rem; display: none; }
+    .file-result.visible { display: block; }
+    .file-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .file-name-tag { font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--accent); background: #edf2ed; padding: .35rem .85rem; border-radius: 99px; }
+    .clear-btn { font-size: .75rem; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; }
+    .clear-btn:hover { color: var(--ink); }
+
+    .file-paras { display: flex; flex-direction: column; gap: 2.5rem; }
+    .para-block { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: white; border: 1px solid var(--border); border-radius: 14px; padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+    .para-original { font-size: .9rem; color: #5a5a54; line-height: 1.75; }
+    .para-simple { font-size: .9rem; color: var(--ink); line-height: 1.75; border-left: 3px solid var(--accent2); padding-left: 1.1rem; }
+    .col-label { font-size: .6rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .6rem; }
+
+    .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--ink); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .processing-row { display: flex; align-items: center; gap: .75rem; color: var(--muted); font-size: .85rem; margin-top: 1rem; }
+    .error-msg { color: #b05050; font-size: .85rem; margin-top: .75rem; }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: #d4d4cc; border-radius: 99px; }
+
+    @media (max-width: 900px) {
+      .app { flex-direction: column; }
+      .left { padding: 2rem 1.5rem; max-width: 100%; }
+      .right { width: 100%; height: auto; position: static; border-left: none; border-top: 1px solid var(--border); }
+      .para-block { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <main class="left">
+    <nav class="nav">
+      <button id="btn-python" class="nav-btn active">Python</button>
+      <button id="btn-c"      class="nav-btn">System C</button>
+    </nav>
+    <header id="app-header"></header>
+    <div id="content-area" class="content-area"></div>
+
+    <!-- UPLOAD -->
+    <section class="upload-section">
+      <h2 class="serif">Upload Your File</h2>
+      <p class="sub">Drop a .txt, .pdf, or .docx — each paragraph gets explained in plain English, side by side.</p>
+      <div class="drop-zone" id="drop-zone">
+        <div class="icon">📄</div>
+        <p><strong>Click to choose</strong> or drag &amp; drop here</p>
+        <p style="font-size:.78rem;margin-top:.4rem;">Supports .txt &middot; .pdf &middot; .docx</p>
+        <input type="file" id="file-input" accept=".txt,.pdf,.docx">
+      </div>
+      <div class="file-result" id="file-result">
+        <div class="file-result-header">
+          <span class="file-name-tag" id="file-name-tag">file.txt</span>
+          <button class="clear-btn" id="clear-btn">&times; Clear</button>
+        </div>
+        <div id="paras-container" class="file-paras"></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="right">
+    <div class="sidebar-body">
+      <div id="sidebar-placeholder">
+        <p class="serif" style="font-style:italic">Code is easy-peasy.</p>
+        <p>Scroll to uncover logic</p>
+      </div>
+      <div id="explanation-box" style="opacity:0;transform:translateY(12px)">
+        <span class="sidebar-label">Insight</span>
+        <p id="explanation-text" class="serif" style="font-style:italic"></p>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      Your Code Guide &mdash; Better code understanding.<br>Authored by MonikaGaha.
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* DATA */
+const WALKTHROUGHS = {
+  python: {
+    title: "Safe Collection Mutation",
+    subtitle: "How to remove items while iterating without breaking the loop.",
+    sections: [
+      { id:"py-1", type:"text",
+        content:"Iterating over a list while removing elements is a classic trap. Since Python's iterator relies on indices, removing an item shifts everything left, causing the next item to be skipped entirely.",
+        explanation:"This logic is often found in data cleaning scripts. It's the difference between a bug that skips half your data and a script that actually works." },
+      { id:"py-2", type:"code", language:"python",
+        content:"def purge_expired(items):\n    # The [:] creates a shallow copy\n    for item in items[:]:\n        if item.is_expired():\n            items.remove(item)\n    return items",
+        explanation:"Notice the [:] syntax. By iterating over a copy but modifying the original, your loop pointer stays safe from index shifts." },
+      { id:"py-3", type:"code", language:"python",
+        content:"import re\n\ndef clean_emails(raw_list):\n    # Using list comprehension with a regex filter\n    regex = r'^[a-z0-9.]+@example\\.com$'\n    return [e.lower() for e in raw_list if re.match(regex, e, re.I)]",
+        explanation:"The re.I flag makes matching case-insensitive. This keeps your regex clean and readable while handling chaotic user input." }
+    ]
+  },
+  c: {
+    title: "Low-Level Resilience",
+    subtitle: "Managing heap memory with defensive patterns.",
+    sections: [
+      { id:"c-1", type:"code", language:"c",
+        content:'char *buffer = (char *)malloc(512 * sizeof(char));\nif (buffer == NULL) {\n    fprintf(stderr, "Fatal: Out of memory\\n");\n    exit(EXIT_FAILURE);\n}',
+        explanation:"Never trust malloc. In long-running systems, memory fragmentation is real. This 3-line check prevents silent crashes down the line." },
+      { id:"c-2", type:"code", language:"c",
+        content:"// Logic execution...\n\nfree(buffer);\nbuffer = NULL;",
+        explanation:"Setting the pointer to NULL after free is a monk-like habit. If you accidentally free it again, the system safely ignores it." }
+    ]
+  }
+};
+
+/* HIGHLIGHT */
+function highlight(text) {
+  let r = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  r = r.replace(/\b(def|return|for|in|if|import|else|while|class|char|int|void|sizeof|fprintf|free|malloc|NULL|exit|EXIT_FAILURE|re)\b/g,'<span class="kw">$1</span>');
+  r = r.replace(/(['"].*?['"])/g,'<span class="str">$1</span>');
+  r = r.replace(/(#.*|\/\/.*)/g,'<span class="cmt">$1</span>');
+  return r;
+}
+
+/* RENDER */
+let observer = null;
+const header = document.getElementById('app-header');
+const contentArea = document.getElementById('content-area');
+const expBox = document.getElementById('explanation-box');
+const expText = document.getElementById('explanation-text');
+const placeholder = document.getElementById('sidebar-placeholder');
+
+function render(key) {
+  const d = WALKTHROUGHS[key];
+  header.innerHTML = `<h1 class="serif">${d.title}</h1><p>${d.subtitle}</p>`;
+  contentArea.innerHTML = d.sections.map(s => {
+    const isCode = s.type === 'code';
+    return `<div id="${s.id}" data-exp="${s.explanation.replace(/"/g,'&quot;')}" class="section-block">
+      ${isCode ? `<div class="code-card">
+        <div class="code-card-header">
+          <span class="lang-tag mono">Source / ${s.language}</span>
+          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+        <pre class="mono"><code>${highlight(s.content)}</code></pre>
+      </div>` : `<div class="text-block"><p>${s.content}</p></div>`}
+    </div>`;
+  }).join('');
+  setupObserver();
+}
+
+function setupObserver() {
+  if (observer) observer.disconnect();
+  observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio > 0.35) {
+        e.target.classList.add('active');
+        showExp(e.target.getAttribute('data-exp'));
+      } else if (e.intersectionRatio < 0.1) {
+        e.target.classList.remove('active');
+      }
+    });
+  }, { rootMargin:'-10% 0px -40% 0px', threshold:[0.1,0.35,0.7] });
+  document.querySelectorAll('.section-block').forEach(el => observer.observe(el));
+}
+
+function showExp(text) {
+  if (expText.textContent === text) return;
+  expBox.style.opacity = 0; expBox.style.transform = 'translateY(12px)';
+  placeholder.style.opacity = '.18';
+  setTimeout(() => {
+    expText.textContent = text;
+    expBox.style.opacity = 1; expBox.style.transform = 'translateY(0)';
+    placeholder.style.opacity = 0;
+  }, 380);
+}
+
+/* NAV */
+let current = 'python';
+const btnPy = document.getElementById('btn-python');
+const btnC  = document.getElementById('btn-c');
+function switchTo(key, a, b) {
+  if (current === key) return;
+  current = key;
+  a.classList.add('active'); b.classList.remove('active');
+  render(key); window.scrollTo({ top:0, behavior:'smooth' });
+}
+btnPy.onclick = () => switchTo('python', btnPy, btnC);
+btnC.onclick  = () => switchTo('c', btnC, btnPy);
+render(current);
+
+/* UPLOAD */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileResult = document.getElementById('file-result');
+const fileNameTag = document.getElementById('file-name-tag');
+const parasContainer = document.getElementById('paras-container');
+const clearBtn = document.getElementById('clear-btn');
+
+dropZone.onclick = () => fileInput.click();
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+clearBtn.onclick = () => {
+  fileResult.classList.remove('visible');
+  parasContainer.innerHTML = '';
+  fileInput.value = '';
+};
+
+async function processFile(file) {
+  fileNameTag.textContent = file.name;
+  parasContainer.innerHTML = '<div class="processing-row"><span class="spin"></span> Reading your file…</div>';
+  fileResult.classList.add('visible');
+  try {
+    let text = '';
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'txt') {
+      text = await file.text();
+    } else if (ext === 'pdf') {
+      text = await extractPDF(file);
+    } else if (ext === 'docx') {
+      text = await extractDocx(file);
+    } else {
+      parasContainer.innerHTML = '<p class="error-msg">Unsupported file type. Please use .txt, .pdf, or .docx</p>';
+      return;
+    }
+    const paragraphs = splitParagraphs(text);
+    if (!paragraphs.length) {
+      parasContainer.innerHTML = '<p class="error-msg">No readable paragraphs found in this file.</p>';
+      return;
+    }
+    renderParagraphs(paragraphs);
+  } catch (err) {
+    parasContainer.innerHTML = '<p class="error-msg">Could not read file: ' + err.message + '</p>';
   }
 }
+
+async function extractPDF(file) {
+  if (!window.pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let out = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    out += content.items.map(x => x.str).join(' ') + '\n';
+  }
+  return out;
+}
+
+async function extractDocx(file) {
+  if (!window.mammoth) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  }
+  const buf = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer: buf });
+  return result.value;
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+function splitParagraphs(text) {
+  return text
+    .split(/\n{2,}|\r\n\r\n/)
+    .map(p => p.replace(/\s+/g, ' ').trim())
+    .filter(p => p.length > 60);
+}
+
+function renderParagraphs(paragraphs) {
+  parasContainer.innerHTML = paragraphs.map((p, i) =>
+    `<div class="para-block" id="para-${i}">
+      <div>
+        <div class="col-label">Original</div>
+        <p class="para-original">${escHTML(p)}</p>
+      </div>
+      <div>
+        <div class="col-label">Plain English</div>
+        <p class="para-simple" id="simple-${i}"><span class="spin"></span></p>
+      </div>
+    </div>`
+  ).join('');
+  paragraphs.forEach((p, i) => setTimeout(() => simplify(p, i), i * 300));
+}
+
+function simplify(text, idx) {
+  const el = document.getElementById('simple-' + idx);
+  if (!el) return;
+  let s = text;
+  const reps = [
+    [/\butilize\b/gi,'use'],[/\bfacilitate\b/gi,'help'],[/\bimplement\b/gi,'build'],
+    [/\bcommensurate\b/gi,'matching'],[/\bsubsequently\b/gi,'then'],[/\bnevertheless\b/gi,'but'],
+    [/\bnotwithstanding\b/gi,'despite'],[/\bin order to\b/gi,'to'],
+    [/\bdue to the fact that\b/gi,'because'],[/\bwith regard to\b/gi,'about'],
+    [/\bprior to\b/gi,'before'],[/\bsubsequent to\b/gi,'after'],
+    [/\bin the event that\b/gi,'if'],[/\bfor the purpose of\b/gi,'to'],
+    [/\bat this point in time\b/gi,'now'],[/\bconsequently\b/gi,'so'],
+    [/\bfurthermore\b/gi,'also'],[/\bmoreover\b/gi,'also'],
+    [/\bsufficient\b/gi,'enough'],[/\bdemonstrate\b/gi,'show'],
+    [/\brequire\b/gi,'need'],[/\bpurchase\b/gi,'buy'],
+    [/\binitiate\b/gi,'start'],[/\bterminate\b/gi,'end'],
+    [/\bascertain\b/gi,'find out'],[/\belucidate\b/gi,'explain'],
+    [/\bpertaining to\b/gi,'about'],[/\boptimal\b/gi,'best'],
+    [/\bparameters\b/gi,'settings'],[/\bfunctionality\b/gi,'feature'],
+    [/\bmethodology\b/gi,'method'],[/\bhypothesis\b/gi,'idea'],
+    [/\bcomponent\b/gi,'part'],[/\bsignificant\b/gi,'big/important'],
+    [/\bindividuals\b/gi,'people'],[/\bprovide\b/gi,'give'],
+    [/\bobtain\b/gi,'get'],[/\bpossess\b/gi,'have'],
+    [/\bnevertheless\b/gi,'still'],[/\bapproximately\b/gi,'about'],
+  ];
+  reps.forEach(([pat, rep]) => { s = s.replace(pat, rep); });
+  s = s.replace(/;\s*/g, '. ');
+  s = s.replace(/,\s*which\s*/gi, '. This ');
+  const sents = s.match(/[^.!?]+[.!?]+/g) || [s];
+  el.textContent = sents.slice(0, 3).join(' ').trim() || s;
+}
+
+function escHTML(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
-</head>
-<body class="min-h-screen bg-zinc-50 flex flex-col lg:flex-row">
-    <!-- Left: Content Area -->
-    <main class="flex-1 px-6 py-12 lg:px-24 lg:py-24 max-w-5xl mx-auto lg:mx-0 overflow-x-hidden">
-        <nav class="mb-20 flex items-center space-x-10 border-b border-zinc-200 pb-4">
-            <button id="btn-python" class="nav-link text-xs font-bold uppercase tracking-widest transition-colors text-zinc-900 border-b-2 border-zinc-900 pb-4 -mb-[18px]">
-                Python
-            </button>
-            <button id="btn-c" class="nav-link text-xs font-bold uppercase tracking-widest transition-colors text-zinc-400 hover:text-zinc-600 pb-4 -mb-[18px]">
-                System C
-            </button>
-        </nav>
-
-        <header id="app-header" class="mb-24">
-            <!-- Dynamic Title and Subtitle -->
-        </header>
-
-        <div id="content-area" class="space-y-40 pb-96">
-            <!-- Code blocks and text sections will be injected here -->
-        </div>
-    </main>
-
-    <!-- Right: The Guide -->
-    <aside class="lg:w-[480px] lg:h-screen lg:sticky lg:top-0 bg-white lg:border-l border-zinc-100 px-12 py-16 lg:py-0 flex flex-col justify-center shadow-2xl lg:shadow-none">
-        <div id="sidebar-container" class="relative min-h-[400px] flex flex-col justify-center">
-            
-            <!-- Insight Box -->
-            <div id="explanation-box" class="explanation-card opacity-0 translate-y-8">
-                <div class="mb-6">
-                    <span class="inline-block px-4 py-1.5 bg-zinc-900 text-white text-[9px] font-black uppercase tracking-[0.3em] rounded-full">
-                        Contextual Insight
-                    </span>
-                </div>
-                <p id="explanation-text" class="serif-font italic text-3xl text-zinc-800 leading-tight">
-                    <!-- Explanation content -->
-                </p>
-            </div>
-
-            <!-- Placeholder when nothing is in focus -->
-            <div id="sidebar-placeholder" class="absolute inset-0 flex flex-col justify-center items-center text-center opacity-10 transition-opacity duration-1000">
-                <p class="serif-font italic text-lg text-zinc-900 mb-2">Codes are Easy-Peasy.</p>
-                <p class="text-zinc-500 text-[10px] tracking-widest uppercase">Scroll to uncover the logic</p>
-            </div>
-        </div>
-        
-        <div class="mt-auto pt-12 border-t border-zinc-50 hidden lg:block pb-12">
-            <p class="text-[9px] text-zinc-400 uppercase tracking-[0.25em] leading-loose">
-                Your Code Guide &mdash; A Tool for better Code understanding.<br/>
-                Authored by MonikaGaha.
-            </p>
-        </div>
-    </aside>
-
-    <script type="module" src="index.js"></script>
 </body>
 </html>
